@@ -1,5 +1,0 @@
-{
-  "tasks": {
-    "dev": "deno run --watch --allow-read=\"../input.txt\" main.ts"
-  }
-}
