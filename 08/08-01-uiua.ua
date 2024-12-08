@@ -12,12 +12,10 @@
 # $ ............
 # $ 
 &fras "input.txt"
-AntiNodes ← ≡(/(-:⟜-))⊡⊚¬≡≡(/≍).⊞⊟.
-:⊏⊚¬↥∩=@\n,@..◴.
-⍜⇌(↘1)
-⊜∘≠@\n.
-⊃(△|/◇⊂≡(□AntiNodes⊚=)¤)
-,¤
-⊏⊚/↧⊂∩⍉⊃(≥0|>)
-◴
-⊢△
+AntiNodes ← ≡(/(-:⟜-))▽¬≡/≍./⊂⊞⊟.
+:▽¬↥∩=@\n,@..◴.           # unique towers
+⍜⇌(↘1)                    # strip
+⊜∘≠@\n.                   # split lines
+⊃(¤△|/◇⊂≡(□AntiNodes⊚=)¤) # generate anti nodes
+▽/↧⊂∩⍉⊃(≥0|>),            # validate in bounds
+⊢△◴                       # deduplicate and count
