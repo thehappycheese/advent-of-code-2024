@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 fn count_digits(mut n: u64) -> u32 {
     let mut count = 0;
     if n == 0 {
@@ -17,10 +19,6 @@ fn split_digits(item:u64, n:u32) -> (u64, u64) {
     (upper, lower)
 }
 
-// #[inline]
-// fn even_digits(item:u64)->bool{
-//     count_digits(item)%2==0
-// }
 #[inline]
 fn replace(item:u64)->Vec<u64>{
     
@@ -35,20 +33,35 @@ fn replace(item:u64)->Vec<u64>{
 }
 
 fn main() {
-    // let input = std::fs::read_to_string("../input.txt")
-    //     .expect("no input?")
-    //     .trim()
-    //     .split(" ")
-    //     .map(|item|item.parse().expect("some invalid int"))
-    //     .collect::<Vec<u64>>();
-    let mut input = vec![125, 17];
+    let mut input = std::fs::read_to_string("../input.txt")
+        .expect("no input?")
+        .trim()
+        .split(" ")
+        .map(|item|item.parse().expect("some invalid int"))
+        .collect::<Vec<u64>>();
     
-    
+    //let mut input = vec![125, 17];
+
     println!("Input: {input:?}");
-    for _ in 0..75 {
+    let mut out = Vec::new();
+    for _ in 0..45 {
         input = input.into_iter().flat_map(replace).collect();
+        out.push(input.len());
     }
-    println!("Output! {:?}", input.len());
+    let mut map = HashMap::new();
+    for e in &input {
+        map.entry(e).and_modify(|i|*i += 1).or_insert(1);
+    }
+    println!("Map Built");
+    let count = map.into_iter().map(|(starter, count)|{
+        println!("Starter {starter:?}");
+        let mut m = vec![*starter];
+        for _ in 45..75 {
+            m = m.into_iter().flat_map(replace).collect();
+        }
+        m.len()*count
+    }).reduce(|a,b|a+b);
+    println!("Output! {count:?}");
 }
 
 #[cfg(test)]
@@ -62,16 +75,6 @@ mod tests{
         assert!(count_digits(99)==2);
         assert!(count_digits(100)==3);
     }
-    // #[test]
-    // fn test2(){
-    //     assert!(even_digits(0)==false); // NOTE DON'T CARE THIS CASE IS WRONG
-    //     assert!(even_digits(1)==false); // NOTE DON'T CARE THIS CASE IS WRONG
-    //     assert!(even_digits(5)==false);
-    //     assert!(even_digits(9)==false);
-    //     assert!(even_digits(10)==true);
-    //     assert!(even_digits(99)==true);
-    //     assert!(even_digits(100)==false);
-    // }
 
     #[test]
     fn test3(){
