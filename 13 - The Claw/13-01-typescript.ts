@@ -43,7 +43,7 @@ const score = (a:Vector2) => a.x*3+a.y;
 let total = 0;
 for (const machine of machines){
     // /console.log(machine);
-    const m = Matrix2.hstack(machine.a,machine.b);
+    const m = Matrix2.hstack(machine.a, machine.b);
     if(Matrix2.determinant(m)===0){
         //console.log("Not Invertible")
         throw new Error(

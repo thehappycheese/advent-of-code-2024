@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 
 export interface Vector2 {
     x: number;
