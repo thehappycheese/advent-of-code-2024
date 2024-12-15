@@ -87,7 +87,7 @@ export const Vector2 = {
         }
     },
     hash(v:Vector2){
-        return `${v.x}-${v.y}`;
+        return `${v.x}x-${v.y}y`;
     },
     to_string:(v:Vector2)=>{
         return (
