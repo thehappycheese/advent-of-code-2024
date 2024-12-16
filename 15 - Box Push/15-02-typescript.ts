@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import chalk from 'chalk'; //"chalk@5.3.0"
 import { Vector2 } from "./Vector2.ts";
 import { Option } from "./Option.ts";
 import { TerminalRenderer } from "./TerminalRenderer.ts";
