@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import { Vector2 } from "./Vector2.ts";
 
 export class TerminalRenderer {

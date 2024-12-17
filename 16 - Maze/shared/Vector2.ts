@@ -95,6 +95,7 @@ export const Vector2 = {
            +`└${v.y}┘`
        )
     },
+    to_string_flat:(v:Vector2)=>`{${v.x} ${v.y}}`,
     log(v:Vector2){
         console.log(Vector2.to_string(v))
     }

@@ -131,7 +131,7 @@ const {tiles, cost, path} = solve(`
 #.###.#.#.#.#.#
 #S..#.....#...#
 ###############
-`)
+`);
 
 //const {tiles, cost, path} = solve(await Deno.readTextFile("input.txt"));
 console.log(cost)
