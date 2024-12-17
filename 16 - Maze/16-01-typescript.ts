@@ -1,12 +1,13 @@
-import { shortest_path } from "./astar.ts";
-import { Vector2 } from "./Vector2.ts";
+import { shortest_path } from "./shared/astar.ts";
+import { pair_loop } from "./shared/itertools.ts";
+import { Vector2 } from "./shared/Vector2.ts";
 
 
 // MARK: Types
 type RotationType = "clockwise"|"anti-clockwise";
 type TranslationType = "next";
 type DirectionType = "N"|"E"|"W"|"S"|"O";
-type Node = {
+export type Node = {
     pos:Vector2
     facing:DirectionType
     outbound:Map<RotationType|TranslationType|"Finish", Edge>
@@ -15,42 +16,10 @@ type Edge = {
     to:Node
     cost:0|1|1000
 }
-type LoopyType<T=unknown> = IterableIterator<T>|Iterable<T>
+export type LoopyType<T=unknown> = IterableIterator<T>|Iterable<T>
 
 // MARK: Helpers
-// const index_neighbors = (pos:Vector2, world_size:Vector2) => [
-//     {x:pos.x     , y:pos.y + 1, }, // N
-//     {x:pos.x - 1 , y:pos.y,     }, // E
-//     {x:pos.x + 1 , y:pos.y,     }, // W
-//     {x:pos.x     , y:pos.y - 1, }, // S
-// ].filter(
-//     neb => neb.x >= 0 && neb.x < world_size.x && neb.y >= 0 && neb.y < world_size.x
-// );
-
 const hash_node = (n:Vector2, direction:DirectionType) => `${direction}${n.x}|${n.y}`;
-
-function * pairwise<T>(items:LoopyType<T>):Generator<[T,T]>{
-    let last;
-    let first = true;
-    for(const item of items){
-        if (first) {
-            first = false;
-            last = item
-            continue
-        }
-        yield [last!, item]
-        last = item
-    }
-}
-function * repeat_first<T>(items:LoopyType<T>):Generator<T>{
-    let first = undefined;
-    for (const item of items){
-        first = first ?? item
-        yield item
-    }
-    if(first) yield first;
-}
-const pair_loop = <T,>(items:LoopyType<T>) =>pairwise(repeat_first(items))
 const direction_to_offset=(direction:DirectionType):Vector2=>{
     switch (direction){
         case "N":
@@ -66,7 +35,7 @@ const direction_to_offset=(direction:DirectionType):Vector2=>{
     }
 }
 
-
+// MARK: Solve
 function solve(input:string){
     const nodes:Map<string, Node> = new Map();
 
@@ -146,41 +115,25 @@ function solve(input:string){
 }
 
 
-async function draw_solution(
-    solution:Node[],
-    tiles:string[][],
-    cost:number
-){
-    const out:string[][] = tiles.map(a=>a.map(c=>c.replace(/[.SE]/, " ").replace("#","█")))
-    for(const node of solution){
-        const pos = node.pos;
-        out[pos.y][pos.x] = node.facing;
-        console.log("\x1b[H\x1b[J")
-        console.log(out.map(i=>i.join("")).join("\n"));
-        console.log(cost)
-        await new Promise(resolve=>setTimeout(resolve, 100));
-    }
-}
+const {tiles, cost, path} = solve(`
+###############
+#.......#....E#
+#.#.###.#.###.#
+#.....#.#...#.#
+#.###.#####.#.#
+#.#.#.......#.#
+#.#.#####.###.#
+#...........#.#
+###.#.#####.#.#
+#...#.....#.#.#
+#.#.#.###.#.#.#
+#.....#...#.#.#
+#.###.#.#.#.#.#
+#S..#.....#...#
+###############
+`)
 
-// const {tiles, cost, path} = solve(`
-// ###############
-// #.......#....E#
-// #.#.###.#.###.#
-// #.....#.#...#.#
-// #.###.#####.#.#
-// #.#.#.......#.#
-// #.#.#####.###.#
-// #...........#.#
-// ###.#.#####.#.#
-// #...#.....#.#.#
-// #.#.#.###.#.#.#
-// #.....#...#.#.#
-// #.###.#.#.#.#.#
-// #S..#.....#...#
-// ###############
-// `)
-
-const {tiles, cost, path} = solve(await Deno.readTextFile("input.txt"));
+//const {tiles, cost, path} = solve(await Deno.readTextFile("input.txt"));
 console.log(cost)
 //await draw_solution(path, tiles, cost);
 

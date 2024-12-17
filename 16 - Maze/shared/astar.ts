@@ -102,7 +102,6 @@ export const all_shortest_paths = function <Node, Hash>(
     const came_from:Map<Hash, Node> =  new Map();
     const cost_g:Map<Hash, number> = new Map([[start_hash, 0]]);
     const cost_f:Map<Hash, number> = new Map([[start_hash, heuristic(start)]]);
-    let successful_path = undefined;
     while (open_set.length>0){
         const current = open_set.sort((a,b)=>b.cost_f-a.cost_f).pop()!;
         const current_hash = node_to_hash(current.node);
