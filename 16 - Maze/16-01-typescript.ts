@@ -1,6 +1,7 @@
 import { Vector2 } from "./Vector2.ts";
 
 
+// MARK: Types
 type RotationType = "clockwise"|"anti-clockwise";
 type TranslationType = "next";
 type DirectionType = "N"|"E"|"W"|"S";
@@ -13,20 +14,30 @@ type Edge = {
     to:Node
     cost:1|1000
 }
+type Trail = {
+    current:Node,
+    cost_so_far:number,
+    previous?:Trail
+}
+type OpenTrails = {
+    trail:Trail,
+    closed:Set<string>
+}[]
+type LoopyType<T=unknown> = IterableIterator<T>|Iterable<T>
 
-const index_neighbors = (pos:Vector2, world_size:Vector2) => [
-    {x:pos.x     , y:pos.y + 1, }, // N
-    {x:pos.x - 1 , y:pos.y,     }, // E
-    {x:pos.x + 1 , y:pos.y,     }, // W
-    {x:pos.x     , y:pos.y - 1, }, // S
-].filter(
-    neb => neb.x >= 0 && neb.x < world_size.x && neb.y >= 0 && neb.y < world_size.x
-);
+// MARK: Helpers
+// const index_neighbors = (pos:Vector2, world_size:Vector2) => [
+//     {x:pos.x     , y:pos.y + 1, }, // N
+//     {x:pos.x - 1 , y:pos.y,     }, // E
+//     {x:pos.x + 1 , y:pos.y,     }, // W
+//     {x:pos.x     , y:pos.y - 1, }, // S
+// ].filter(
+//     neb => neb.x >= 0 && neb.x < world_size.x && neb.y >= 0 && neb.y < world_size.x
+// );
 
 const hash_node = (n:Vector2, direction:DirectionType) => `${direction}${n.x}|${n.y}`;
+const hash_trail = (t:Trail) => hash_node(t.current.pos, t.current.facing);
 
-
-type LoopyType<T=unknown> = IterableIterator<T>|Iterable<T>
 function * pairwise<T>(items:LoopyType<T>):Generator<[T,T]>{
     let last;
     let first = true;
@@ -62,11 +73,6 @@ const direction_to_offset=(direction:DirectionType):Vector2=>{
     }
 }
 
-type Trail = {
-    current:Node,
-    cost_so_far:number,
-    previous?:Trail
-}
 
 function solve(input:string){
     const nodes:Map<string, Node> = new Map();
@@ -77,6 +83,7 @@ function solve(input:string){
     let end_nodes:Node[];
     let end_node_hash:Set<string>;
 
+    // MARK: Find Nodes
     tiles.forEach((row, y)=>row.forEach((cell, x)=>{
         if(cell==="#"){
             walls.add(Vector2.hash({x,y}))
@@ -104,6 +111,7 @@ function solve(input:string){
         }
     }));
 
+    // MARK: Build Edges
     for(let node of nodes.values()){
         let neighbor = nodes.get(hash_node(
             Vector2.add(node.pos,direction_to_offset(node.facing)),
@@ -113,32 +121,39 @@ function solve(input:string){
             node.outbound.set("next", {to:neighbor, cost:1})
         }
     }
+    
+    // MARK: Path Finding
+    
     const trail:Trail = {
         cost_so_far:0,
         current:start_node!,
     };
-    let open_trails:Trail[] = [trail];
-    const closed_trails:Map<string, Trail> = new Map();
+    let open_trails:OpenTrails = [{trail, closed:new Set(hash_trail(trail))}];
     const finished_paths:Trail[] = [];
+    let lowest_cost_so_far = Infinity;
     while(open_trails.length>0){
-        const new_open_trails:Trail[] = [];
-        for(const trail of open_trails){
+        for(const {trail, closed} of open_trails){
             const hash = hash_node(trail.current.pos,trail.current.facing);
-            closed_trails.set(
-                hash,
-                trail
-            );
+            closed.add(hash);
             if(end_node_hash!.has(hash)){
-                finished_paths.push(trail);
+                if(trail.cost_so_far < lowest_cost_so_far){
+                    lowest_cost_so_far = trail.cost_so_far
+                    finished_paths.push(trail);
+                    console.log(finished_paths.length);
+                }
             }
         }
-        // TODO: could be a flat map
-        for(const trail of open_trails){
-            const next_trails:Trail[] = trail.current.outbound.values().map(({cost, to})=>({
-                cost_so_far:trail.cost_so_far+cost,
-                current:to,
-                previous:trail
-            })).filter(trail=>!closed_trails.has(hash_node(trail.current.pos, trail.current.facing))).toArray();
+        // could be flat map?
+        const new_open_trails = [];
+        for(const {trail, closed} of open_trails){
+            const next_trails:OpenTrails = trail.current.outbound.values().map(({cost, to})=>({
+                trail:{
+                    cost_so_far:trail.cost_so_far+cost,
+                    current:to,
+                    previous:trail
+                },
+                closed:new Set([...closed, hash_node(to.pos, to.facing)])
+            })).filter(({trail})=>!closed.has(hash_trail(trail))).toArray();
             new_open_trails.push(...next_trails);
         }
         open_trails = new_open_trails;
