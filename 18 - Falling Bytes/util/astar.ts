@@ -57,7 +57,6 @@ export const shortest_path = function <Node, Hash>(
     while (open_set.length>0){
         const current = open_set.sort((a,b)=>b.cost_f-a.cost_f).pop()!;
         const current_hash = node_to_hash(current.node);
-        console.log(current_hash, goal_hash)
         if(current_hash===goal_hash) {
             // MARK: reconstruct path
             const path = reconstruct_path(current.node, node_to_hash, came_from);
