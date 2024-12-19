@@ -2,9 +2,13 @@ import { Vector2 } from "./util/Vector2.ts";
 import { shortest_path } from "./util/astar.ts";
 
 let input = await Deno.readTextFile("input.txt");
-let world_size:Vector2 = {x:70, y:70};
-let goal:Vector2 = {x:69,y:69};
-// let input_test = `
+let world_size:Vector2 = {x:71, y:71};
+let goal:Vector2 = {x:70,y:70};
+let bytes_dropped = 1024;
+
+
+
+// let input = `
 // 5,4
 // 4,2
 // 4,5
@@ -33,6 +37,10 @@ let goal:Vector2 = {x:69,y:69};
 // `;
 // let world_size:Vector2 = {x:7, y:7};
 // let goal:Vector2 = {x:6,y:6};
+// let bytes_dropped = 12;
+
+
+
 type Node = {
     pos:Vector2,
     outbound:{to:Node, cost:1}
@@ -51,21 +59,40 @@ const index_neighbors = (world_size:Vector2) => (position:Vector2) => [
 ].filter(
     ({to:{x,y}}) => x >= 0 && x < world_size.x && y >= 0 && y < world_size.y
 );
-const banned_positions = parse_input(input).map(([x,y])=>({x,y})).slice(0,1024);
+const banned_positions = parse_input(input).map(([x,y])=>({x,y})).slice(0,bytes_dropped);
+console.log(banned_positions);
 const banned_position_set = new Set(banned_positions.map(pos=>hash_vec(world_size)(pos)));
 console.log("there are ", banned_positions.length, "banned positions");
-const draw_grid = (size:Vector2, positions:Vector2[]) => {
-    const grid = Array.from({ length: size.y }, () => Array(size.x).fill("."));
-    positions.forEach(({x, y}) => { if (x < size.x && y < size.y) grid[y][x] = "#"; });
+
+const draw_grid = (
+    size: Vector2, 
+    char_positions: Record<string, Vector2[]>, 
+    background_char: string = "░"
+) => {
+    const grid = Array.from({ length: size.y }, () => Array(size.x).fill(background_char));
+    Object.entries(char_positions).forEach(([char, positions]) => {
+        positions.forEach(({x, y}) => {
+            if (x < size.x && y < size.y) grid[y][x] = char;
+        });
+    });
     grid.forEach(row => console.log(row.join("")));
 };
-draw_grid(world_size,banned_positions);
+
+
+
+// create network
+
+
 const {cost,path} = shortest_path({
     start:{x:0, y:0},
     goal,
     heuristic:pos=>Math.abs(goal.x-pos.x)+Math.abs(goal.y-pos.y),
     node_to_hash:hash_vec(world_size),
-    adjacent:pos=>index_neighbors(world_size)(pos).filter(pos=> !banned_position_set.has(hash_vec(world_size)(pos.to))),
+    adjacent:pos=>index_neighbors(world_size)(pos).filter(
+        pos=> !banned_position_set.has(hash_vec(world_size)(pos.to))
+    ),
 });
-console.log(path);
-console.log(path.length);
+draw_grid(world_size,{"█":banned_positions,"x":path});
+//console.log(path);
+console.log("squares_covered",path.length);
+console.log("Test Case Correct steps:", path.length-1);
