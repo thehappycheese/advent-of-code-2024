@@ -1,4 +1,4 @@
-import { Computer, run, decompile, run_until_mismatch, print_state, run_to_console, run_to_list } from "./util/computer.ts";
+import { Computer, run, decompile, run_until_mismatch, print_state, run_to_console, run_to_list, run_generate } from "./util/computer.ts";
 
 const quickstep = (stdout:(out:number)=>void)=>(cp:Computer)=>{
     if (cp.pointer >= cp.program.length) throw new Error("eh");
@@ -75,30 +75,14 @@ function quick_step(A:number){
     let b = (A & 7) ^ 1;
     return ((b ^ Math.floor(A / (2**b))) ^ 6) & 7;
 }
-function quick_search(){
-    const target = [2,4,1,1,7,5,4,0,0,3,1,6,5,5,3,0]
-    console.log("Quick")
-    for(let initial_A=3e9; initial_A<Number.MAX_SAFE_INTEGER;initial_A++){
-        if(initial_A%1e9==0) console.log(initial_A);
-        let pointer = 0;
-        let A = initial_A;
-        while(A>0 && pointer<target.length){
-            const expected = target[pointer];
-            pointer++;
-            const b = (A & 7) ^ 1;
-            const actual = (((b ^ Math.floor(A / (2**b))) ^ 6) & 7)
-            if(expected!=actual) break;
-            A = Math.floor(A/8);
-        }
-        if(pointer>10) console.log("pointer",pointer,"A", initial_A);
-        if (A===0 && pointer===target.length+1) return A;
-    }
-    console.log("Search")
+
+
+let input;
+try{
+    input = await Deno.readTextFile("input.txt");
+}catch(e){
+    input = await Deno.readTextFile("./17 - Computer/input.txt");
 }
-
-
-
-const input = await Deno.readTextFile("input.txt");
 // const input = `
 // Register A: 2024
 // Register B: 0
@@ -109,29 +93,47 @@ const input = await Deno.readTextFile("input.txt");
 const computer = parse_input(input);
 print_state(computer);
 console.log(decompile(computer));
-console.log("Output", run_to_list(computer).join(","));
-console.log("Output Quick", quick_run(computer.A).join(","));
-
-
-console.log("...")
-let n = (((56*8+2)*8+6)*8+4)*8+2
-console.log(quick_run(n))
-console.log(quick_step(n))
-console.log("...")
-
-let target = computer.program.reverse()
+console.log("=== Run Forwards: ====")
+console.log("run_to_list  ", run_to_list(computer).join(","));
+console.log("quick_run    ", quick_run(computer.A).join(","));
+console.log("run_generate ", run_generate(computer).toArray().join(","))
+console.log("run gen next ", run_generate(computer).next().value)
+console.log("\n=== Run Backwards: ===")
+let target = computer.program.toReversed();
 let tp=0;
-let stages:number[] = []
-let pin = 0;
+let stages:number[] = [];
+let bases = []
+let base = 0;
 while(stages.length<target.length){
     const expected_result = target[tp]
-    const base = 0;
-    for(let stage of stages){
-        base = base*8+stage;
-    }
-    for(let pin=0;pin<8;pin++){
-        quick_step()
+    for(let i=0; i<100; i++){
+        const actual_result = run_generate({...computer, A:base+i}).next().value!;
+        if(actual_result === expected_result){
+        //if(quick_step(base+i) === expected_result){
+            stages.push(i);
+            tp++
+            bases.push(base+i);
+            base = (base+i)*8;
+            break
+        }
     }
 }
+base = Math.floor(base/8);
+console.log("stages", stages.join(","));
+console.log("bases", bases.join(","));
+console.log("Check Quick", quick_run(base).join(","));
+console.log("Check", run_to_list({...computer, A:base}).join(","));
+console.log("Answer:", base);
 
-//console.log(run_until_mismatch(computer.program)({...computer, A:3933903034}))
+console.log("...");
+
+bases
+.map(A=>[A,run_to_list({...computer, A:A})])
+//.map(s=>[s,quick_run(s)])
+.forEach(([a,b])=>console.log(a.toString().padStart(30),b.join(",").padStart(38)))
+
+let stages2 = [7,0,2,6,4,2,4,5,2,8,0,0,0,0,0,0];
+let base2 = stages2.reduce((acc, curr)=>(acc*8+curr));
+let pd = (i:number)=>i.toString().padStart(2);
+console.log("targ:   ", target.map(pd).join(","))
+console.log("piccky: ", run_to_list({...computer, A:base2}).toReversed().map(pd).join(","))

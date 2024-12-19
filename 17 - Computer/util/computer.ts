@@ -24,7 +24,8 @@ const combo = (c: Computer) => (combo: Combo) => {
     case 6:
       return c.C;
     default:
-      throw new Error("Invalid combo");
+        print_state(c)
+      throw new Error(`Invalid combo ${combo}`);
   }
 };
 
