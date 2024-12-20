@@ -48,7 +48,7 @@ const bst: Instruction = (_stdout: (out: number) => void) => (cp: Computer) => (
 });
 const jnz: Instruction = (_stdout: (out: number) => void) => (cp: Computer) => (lit: number) => ({
   ...cp,
-  pointer: cp.A === 0 ? cp.pointer + 2 : cp.pointer = lit,
+  pointer: cp.A === 0 ? cp.pointer + 2 : lit,
 });
 const bxc: Instruction = (_stdout: (out: number) => void) => (cp: Computer) => (_: number) => ({
   ...cp,
@@ -56,7 +56,7 @@ const bxc: Instruction = (_stdout: (out: number) => void) => (cp: Computer) => (
   B: cp.B ^ cp.C
 });
 const out: Instruction = (stdout: (out: number) => void) => (cp: Computer) => (cb: Combo) => {
-  stdout(combo(cp)(cb) % 8);
+  stdout(combo(cp)(cb) & 7);
   return {
     ...cp,
     pointer: cp.pointer + 2,
@@ -111,25 +111,10 @@ export const run_generate = function* (cp:Computer){
     }
 }
 
-export const run_to_console = run(i=>console.log(i))
 export const run_to_list = (cp:Computer)=>{
     const result:number[] = [];
     run(i=>result.push(i))(cp);
     return result;
-}
-export const run_until_mismatch = (expected_output:number[]) => (cp:Computer) =>{
-    let pointer = 0;
-    for(const out of run_generate(cp)){
-        if(pointer>=expected_output.length){
-            return {program_finished:false, pointer, all_expected:false}
-        }
-        const expected = expected_output[pointer]
-        if(expected!==out){
-            return {program_finished:false, pointer, all_expected:false}
-        }
-        pointer++;
-    }
-    return {complete:true, pointer, all_expected:pointer==expected_output.length}
 }
 
 const describe_combo = (cb:Combo)=>({
