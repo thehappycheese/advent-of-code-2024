@@ -18,7 +18,7 @@ export const draw_grid = (
 export const draw_double_grid = ({
     size, 
     char_positions, 
-    numbers,
+    numbers = new Map(),
     background_char="░",
     scale_x=2,
     scale_y=2,
@@ -26,7 +26,7 @@ export const draw_double_grid = ({
     size: Vector2, 
     char_positions: Record<string, Vector2[]>, 
     background_char?: string,
-    numbers:Map<Vector2, number>,
+    numbers?:Map<Vector2, number>,
     scale_x?:number,
     scale_y?:number
 }) => {

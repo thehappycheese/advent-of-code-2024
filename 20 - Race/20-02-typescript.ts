@@ -37,6 +37,7 @@ const tiles = input.trim().split("\n").map(row=>row.split(""));
 const world_size:Vector2 = {x:tiles[0].length, y:tiles.length};
 //const hash = Vector2.hash_int(world_size);
 const hash = Vector2.hash_string;
+const in_bounds = Vector2.in_bounds(world_size);
 const neighbors = Vector2.neighbors(world_size);
 let start_node:Node;
 let end_node:Node;
@@ -78,24 +79,51 @@ const cheat_spots = (position:Vector2) => {
         .map((item, index)=>Vector2.add(position, {x:item, y:rng2[(index+rng2.length/4)%rng2.length]}))
         .filter(Vector2.in_bounds(world_size));
 }
+const cheat_kernel =function* (position:Vector2){
+    const radius = 20;
+    for(let x=-radius;x<=radius;x++){
+        for(let y=-radius;y<=radius;y++){
+            const dist = Math.abs(x)+Math.abs(y);
+            const pos = Vector2.add(position, {x,y});
+            if(dist>=2 && dist<=radius && in_bounds(pos)){
+                yield [pos, dist] as [Vector2, number];
+            }
+        }
+    }
+}
 
 draw_double_grid({
     size:world_size,
     char_positions:{
         "█":nodes.values().filter(n=>n.type===Tile.Wall).map(n=>n.pos).toArray(),
         //"&":result.path.map(n=>n.pos)
-        "*":cheat_spots(start_node!.pos)
+        //"*":cheat_spots(start_node!.pos)
     },
-    numbers: new Map(result.cost_g.entries().map(([hash, cost])=>[nodes.get(hash)!.pos, cost])),
-    scale_x: 2,
-    scale_y: 1,
+    //numbers: new Map(result.cost_g.entries().map(([hash, cost])=>[nodes.get(hash)!.pos, cost])),
+    numbers: new Map(cheat_kernel({x:8,y:8}).filter(([pos,_])=>in_bounds(pos))),
+    scale_x: 3,
+    scale_y: 2,
 });
-let f = result.path
+const f = result.path
     .map(node=>({pos:node.pos, g_cost:result.cost_g.get(hash(node.pos))!}))
-    .flatMap(({pos, g_cost})=>cheat_spots(pos)
-        .map(i=>result.cost_g.get(hash(i)))
-        .filter(f=>f && f>g_cost+2)
-        .map(f=>f-(g_cost+2))
+    .flatMap(({pos:start_pos, g_cost})=>cheat_kernel(start_pos)
+        .map(([target_pos, cheat_cost])=>({
+            start_pos,
+            target_pos,
+            cheat_cost:cheat_cost+g_cost,
+            normal_cost:result.cost_g.get(hash(target_pos))
+        }))
+        .filter(({cheat_cost, normal_cost})=> normal_cost && cheat_cost<normal_cost)
+        .map(f=>({...f, savings:f.normal_cost!-f.cheat_cost}))
+        .filter(f=>f.savings>=50)
+        .toArray()
     );
-const savings = new Map(Map.groupBy(f,i=>i).entries().map(([k,v])=>[k,v.length]).filter(([saving,_count])=>saving>=100))
+console.log(Map.groupBy(f,i=>i.savings))
+const savings = new Map(
+    Map.groupBy(f,i=>i.savings)
+    .entries()
+    .map(([k,v])=>[k,v.length])
+    .filter(([saving, _])=>saving>=100)
+)
+console.log(savings)//.values().reduce((a,b)=>a+b))
 console.log(savings.values().reduce((a,b)=>a+b))
