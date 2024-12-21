@@ -86,18 +86,17 @@ export const Vector2 = {
             return t1 >= 0 && t1 <= 1 && t2 >= 0 && t2 <= 1;
         }
     },
+    in_bounds:(world_size:Vector2)=>(position:Vector2)=> position.x >= 0 && position.x < world_size.x && position.y >= 0 && position.y < world_size.y,
     hash_string(v:Vector2){
         return `${v.x}x-${v.y}y`;
     },
     hash_int:(world_size:Vector2)=>(position:Vector2)=>position.x + position.y * (world_size.x+1),
     neighbors:(world_size:Vector2) => (position:Vector2) => [
-        {x:position.x-1, y:position.y},
         {x:position.x+1, y:position.y},
-        {x:position.x, y:position.y-1},
         {x:position.x, y:position.y+1},
-    ].filter(
-        ({x,y}) => x >= 0 && x < world_size.x && y >= 0 && y < world_size.y
-    ),
+        {x:position.x-1, y:position.y},
+        {x:position.x, y:position.y-1},
+    ].filter(Vector2.in_bounds(world_size)),
     to_string:(v:Vector2)=>{
         return (
             `┌${v.x}┐\n`

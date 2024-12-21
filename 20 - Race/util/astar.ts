@@ -60,7 +60,12 @@ export const shortest_path = function <Node, Hash>(
         if(current_hash===goal_hash) {
             // MARK: reconstruct path
             const path = reconstruct_path(current.node, node_to_hash, came_from);
-            return {cost:current.cost_f, path};
+            return {
+                cost:current.cost_f,
+                path,
+                cost_g,
+                cost_f
+            };
         }
         for (const {to:neighbor, cost} of adjacent(current.node)){
             const tentative_score = cost_g.get(current_hash)! + cost;
