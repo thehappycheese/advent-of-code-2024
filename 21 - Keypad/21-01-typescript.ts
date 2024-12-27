@@ -160,6 +160,25 @@ const chainpad = (pad_function:(layer: number) => Node[])=>(presses:Key[])=>{
     pairwise(zip(presses,pads)).forEach(([[press, pa],[_,pb]])=>{
         pa.find(n=>n.key===press)?.outbound.push({to:pb.find(n=>n.key===press)!, cost:1, type:Key.A})
     })
+    // STRATEGY 1
+    // const xds = Math.sign(goal.pos.x-start.pos.x);
+    // const yds = Math.sign(goal.pos.y-start.pos.y);
+    // const keypresses = []
+    // let {x,y} = start.pos;
+    // for(;x!=goal.pos.x;x+=xds){
+    //     if(xds<0){
+    //         keypresses.push(Key.LEFT)
+    //     }else{
+    //         keypresses.push(Key.RIGHT)
+    //     }
+    // }
+    // for(;y!=goal.pos.y;y+=yds){
+    //     if(yds<0){
+    //         keypresses.push(Key.UP)
+    //     }else{
+    //         keypresses.push(Key.DOWN)
+    //     }
+    // }
     const result = shortest_path({
         start,
         goal,
@@ -181,3 +200,47 @@ const path=(keys:Key[])=>chain_dirpad(chain_dirpad(chain_doorpad(keys)));
 console.log(input.trim().split("\n").map(i=>path(i.split("")).join("")))
 console.log(input.trim().split("\n").map(i=>path(i.split("")).join("").length))
 console.log(input.trim().split("\n").map(i=>parseFloat(i)*path(i.split("")).join("").length).reduce((a,b)=>a+b))
+
+
+const ponkers = (start:Vector2, goal:Vector2, permitted:(pos:Vector2)=>boolean) => {
+    const xds = Math.sign(goal.x-start.x);
+    const yds = Math.sign(goal.y-start.y);
+    const key_presses:Key[] = []
+    let {x,y} = start;
+    for(;x!=goal.x;x+=xds){
+        if(xds<0){
+            key_presses.push(Key.LEFT)
+        }else{
+            key_presses.push(Key.RIGHT)
+        }
+    }
+    if(permitted({x,y})){
+        for(;y!=goal.y;y+=yds){
+            if(yds<0){
+                key_presses.push(Key.UP)
+            }else{
+                key_presses.push(Key.DOWN)
+            }
+        }
+        return key_presses
+    }else{
+        const key_presses:Key[] = []
+        let {x,y} = start;
+        for(;y!=goal.y;y+=yds){
+            if(yds<0){
+                key_presses.push(Key.UP)
+            }else{
+                key_presses.push(Key.DOWN)
+            }
+        }
+        for(;x!=goal.x;x+=xds){
+            if(xds<0){
+                key_presses.push(Key.LEFT)
+            }else{
+                key_presses.push(Key.RIGHT)
+            }
+        }
+        return key_presses
+    }
+}
+console.log(ponkers({x:0,y:0},{x:3,y:3}, n=>!Vector2.eq(n,{x:3,y:0})).join(""))

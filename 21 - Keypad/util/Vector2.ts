@@ -51,6 +51,7 @@ export const Vector2 = {
     mag_squared(a: Vector2): number {
         return Math.sqrt(a.x * a.x + a.y * a.y);
     },
+    L1:(a:Vector2)=>Math.abs(a.x)+Math.abs(a.y),
     lerp(a: Vector2, b: Vector2, t: number): Vector2 {
         return {
             x: a.x + (b.x - a.x) * t,
